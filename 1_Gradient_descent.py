@@ -42,10 +42,10 @@ def gradientDescent(f, gradf, guess, step, thold) :
 
 
 def quadraticBowl(x,y) : 
-    return (x**2 + y**2)
+    return (x**2.0 + y**2.0)
 
 def gradQuadraticBowl(x,y) :
-    return [2*x, 2*y]
+    return [2.0*x, 2.0*y]
 
 
 """
@@ -66,10 +66,19 @@ calculates the numerical gradient
 
 @return [float]     gradient vector
 """
-
-def finiteDifference(f, point):
-    f
+def finiteDifference(f, point, delta=0.0001):
+    gradv =  np.zeros(shape=(len(point),))
     
+    for d in xrange(len(point)) :
+        vdelta      =    np.zeros(shape=(len(point),))
+        vdelta[d]   =    delta
+        fh          =    f(*(np.array(point) + vdelta))
+        fl          =    f(*(np.array(point) - vdelta))
+        pd          =    (fh-fl)/(2*delta)
+        gradv[d]    =    pd
+    
+    return gradv
 
-
-testQuad()    
+    
+    
+    
