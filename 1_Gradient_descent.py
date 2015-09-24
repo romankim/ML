@@ -25,7 +25,7 @@ implements gradient descent
 @return float, [float]   minimum scalar value, and the correspondin coordnates
 
 """
-def gradientDescent(f, gradf, guess, step, thold) :
+def gradientDescent(f, gradf, guess, step=0.001, thold=0.00001) :
     coord  =  np.array(guess)
     obj    =  f(*coord)
     diff   =  np.inf
