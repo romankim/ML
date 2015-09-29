@@ -12,8 +12,11 @@ Created on Wed Sep 23 17:37:02 2015
 """
 import numpy as np
 from scipy.stats import multivariate_normal
+from scipy.optimize import fmin_bfgs
+
 
 """
+Problem 1.1
 implements gradient descent
 
 @param function f       target function we are trying to optimize
@@ -27,38 +30,61 @@ implements gradient descent
 """
 def gradientDescent(f, gradf, guess, step=0.001, thold=0.00001) :
     coord  =  np.array(guess)
-    obj    =  f(*coord)
+    obj    =  f(coord)
     diff   =  np.inf
+    niter  =  0
         
     while (diff > thold) :
-        delta   =  -step * np.array(gradf(*coord))
+        delta   =  -step * np.array(gradf(coord))
         coord   =  coord + delta
-        newobj  =  f(*coord)
+        newobj  =  f(coord)
         diff    =  obj - newobj
         obj     =  newobj
+        niter  += 1
+    
+    print "Gradient Descent"
+    print "Number of function calls : %d" % niter
     
     return obj, coord
     
 
-
-def quadraticBowl(x,y) : 
+"""
+Problem 1.2
+"""
+def quadraticBowl(l) :
+    x = l[0]
+    y = l[1]
     return (x**2.0 + y**2.0)
-
-def gradQuadraticBowl(x,y) :
+    
+"""
+Problem 1.2
+"""    
+def gradQuadraticBowl(l) :
+    x = l[0]
+    y = l[1]
     return [2.0*x, 2.0*y]
 
 
 """
-tests the grad function on a multivaraite gaussian normal
+Problem 1.2
+tests the grad function on a Quadratic bowl
 """
 def testQuad() :            
-    obj, coord = gradientDescent(f=quadraticBowl, gradf=gradQuadraticBowl, \
-                    guess=[2.0, 3.0], step=0.1, thold = 0.0 )
-                    
-    print( "obj:{:.3f}\t coord:({:.3f},{:.3f})".format(obj, coord[0], coord[1]))
+    x     = 100.0
+    y     = 3.0
+    step  = 0.1
+    thold = 0.0015
     
+    goal, coord = gradientDescent(f=quadraticBowl, gradf=gradQuadraticBowl, \
+                    guess=[x, y], step=step, thold=thold )
+                    
+    print( "goal:{:.8f}\t coord:({:.8f},{:.8f})".format(goal, coord[0], coord[1]))
+
+
+
 
 """
+Problem 1.3
 calculates the numerical gradient
 
 @param  function    f        target function
@@ -78,6 +104,34 @@ def finiteDifference(f, point, delta=0.0001):
         gradv[d]    =    pd
     
     return gradv
+    
+    
+"""
+Problem 1.4
+Compare my gradientDescent with another scipy numerical optimizer
+"""
+
+def testScipy() : 
+    # Initial guess
+    x      =  100.0
+    y      =  3.0
+    step   =  0.1
+    
+    result = fmin_bfgs(quadraticBowl, x0=[x,y], epsilon=step, full_output=True, disp=False)
+        
+    # unpacking
+    xopt  = result[0]
+    fopt  = result[1]
+    calls = result[4]
+    
+    print "Gradient Descent"
+    print "Number of function calls : %d" % calls
+    print( "goal:{}\t coord:({},{})".format(fopt, xopt[0], xopt[1]))
+    
+
+testQuad()
+testScipy()
+    
 
     
     
