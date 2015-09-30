@@ -39,7 +39,21 @@ def designSineMatrix(X, order) :
     
     return phi
     
+
+"""
+Problem 3.1
+Implement ridge regression
+"""
+def ridgeRegression(X, Y, order, lam=0):
+    pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
+    phi = designMatrix(X, order)
+    w   = np.dot( np.dot( np.linalg.inv( lam * np.identity(order) + np.dot(phi.T, phi) ), phi.T ), Y)
     
+    pts = [[p] for p in pl.linspace(min(X), max(X), 100)]
+    Yp = pl.dot(w.T, designMatrix(pts, order).T)
+    pl.plot(pts, Yp.tolist()[0])
+    
+    return w
         
     
 
@@ -102,7 +116,10 @@ def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
         print('SSE: ', SSE)
     
     return SSE
-    
+
+
+
+
 
 
 
@@ -146,11 +163,25 @@ def testProblemThree():
 
 def testProblemFour():
     X,Y         =   bishopCurveData()
-    order       =   2
+    order       =   8
     
     weights = regressionPlot(X,Y, order, designMatrix=designSineMatrix)
     
     print weights.flatten()
     computeSSE(weights, X, Y, order, verbose=True, designMatrix = designSineMatrix)
+
     
-testProblemFour()
+def test3_1():
+    X, Y    =    bishopCurveData()
+    order   =    10
+    lam     =    np.e ** -18
+    #lam     =    0
+    #lam     =    1
+    
+    weights = ridgeRegression(X, Y, order, lam)
+    
+    print "Ridge regresion weights: {}".format(str(weights.flatten()))
+    
+    
+    
+test3_1()
