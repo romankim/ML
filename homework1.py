@@ -123,7 +123,7 @@ def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
 
 
 
-######################## Tests ###########################################
+######################## Part 2 ###########################################
 
 
 def testProblemOne(order=4):
@@ -170,6 +170,8 @@ def testProblemFour():
     print weights.flatten()
     computeSSE(weights, X, Y, order, verbose=True, designMatrix = designSineMatrix)
 
+    
+######################## Part 3 ###########################################    
     
 def test3_1():
     X, Y    =    bishopCurveData()
