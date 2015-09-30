@@ -124,7 +124,7 @@ def ridgeRegression(X, Y, order, lam=0, verbose=True):
     
     return w
 
-def plot(X, Y, w, figurenum=1, designMatrix=designMatrix):
+def plot(X, Y, w, figurenum=1, designMatrix=designMatrix, titlestring=None):
     pl.figure(figurenum)
     pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
     order = len(w)
@@ -132,6 +132,9 @@ def plot(X, Y, w, figurenum=1, designMatrix=designMatrix):
     Yp = pl.dot(w.T, designMatrix(pts, order).T)
      
     pl.plot(pts, Yp.tolist()[0])
+    
+    if titlestring is not None:
+        pl.title(titlestring)
 
 """
 Problem 3.2
@@ -176,10 +179,9 @@ def findBestRegularzation():
             bestSSE              =  sse_v
             bestweights          =  w
     
-    print "test data"
-    plot(Xd, Yd, bestweights, 1)
-    print "validation data"
-    plot(Xv, Yv, bestweights, 2)
+
+    plot(Xd, Yd, bestweights, 1, titlestring="Ridge Regression on Test Data")
+    plot(Xv, Yv, bestweights, 2, titlestring="Ridge Regression on Validation Data")
     
     print "M = {}, Lamda = {}, w = {}, SSE = {}".format(bestorder, bestlam, str(bestweights.flatten()), bestSSE )
     
