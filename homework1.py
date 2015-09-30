@@ -39,21 +39,6 @@ def designSineMatrix(X, order) :
     
     return phi
     
-
-"""
-Problem 3.1
-Implement ridge regression
-"""
-def ridgeRegression(X, Y, order, lam=0):
-    pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
-    phi = designMatrix(X, order)
-    w   = np.dot( np.dot( np.linalg.inv( lam * np.identity(order) + np.dot(phi.T, phi) ), phi.T ), Y)
-    
-    pts = [[p] for p in pl.linspace(min(X), max(X), 100)]
-    Yp = pl.dot(w.T, designMatrix(pts, order).T)
-    pl.plot(pts, Yp.tolist()[0])
-    
-    return w
         
     
 
@@ -98,6 +83,12 @@ def regressTrainData():
 
 def regressValidateData():
     return getData('regress_validate.txt')
+    
+
+def regressTestData():
+    return getData('regress_test.txt')
+    
+    
 
 #problem 2.2
 """
@@ -117,10 +108,84 @@ def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
     
     return SSE
 
+"""
+Problem 3.1
+Implement ridge regression
+"""
+def ridgeRegression(X, Y, order, lam=0, verbose=True):
+    pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
+    phi = designMatrix(X, order)
+    w   = np.dot( np.dot( np.linalg.inv( lam * np.identity(order) + np.dot(phi.T, phi) ), phi.T ), Y)
+    if verbose:
+        pts = [[p] for p in pl.linspace(min(X), max(X), 100)]
+        Yp = pl.dot(w.T, designMatrix(pts, order).T)
+         
+        pl.plot(pts, Yp.tolist()[0])
+    
+    return w
 
+def plot(X, Y, w, figurenum=1, designMatrix=designMatrix):
+    pl.figure(figurenum)
+    pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
+    order = len(w)
+    pts = [[p] for p in pl.linspace(min(X), max(X), 100)]
+    Yp = pl.dot(w.T, designMatrix(pts, order).T)
+     
+    pl.plot(pts, Yp.tolist()[0])
 
+"""
+Problem 3.2
+"""
+def crossValidation():
+    Xd, Yd  =  regressTrainData()
+    Xv, Yv  =  regressValidateData()
+    Xt, Yt  =  regressTestData()
+    
+    order   =  4
+    #lam     =    np.e ** -18
+    #lam     =    0
+    lam     =    0
+    w       =    ridgeRegression(Xd, Yd, order, lam)
+    
+    print "Training Data SSE\t M=%d, lam=%f" % (order, lam)
+    sse_d   =    computeSSE(w, Xd, Yd, order, verbose=True)
+    print "Valdiation Data SSE\t M=%d, lam=%f" % (order, lam)
+    sse_v   =    computeSSE(w, Xv, Yv, order, verbose=True)
+    print "Testing Data SSE\t M=%d, lam=%f" % (order, lam)
+    sse_t   =    computeSSE(w, Xt, Yt, order, verbose=True)
+    
+def findBestRegularzation():
+    Xd, Yd  =  regressTrainData()
+    Xv, Yv  =  regressValidateData()
+    Xt, Yt  =  regressTestData()
 
-
+    orders       =   np.arange(1, 11, 1, dtype=int)
+    lamdas       =   np.arange(0.0, 3.0, 0.01, dtype=float)
+    bestSSE      =   np.inf
+    bestorder    =   0.0
+    bestlam      =   0.0
+    bestweights  = []
+    
+    
+    for order, lam in [(o,l) for o in orders for l in lamdas]:
+        w       =    ridgeRegression( Xd, Yd, order, lam, verbose=False)
+        sse_v   =    computeSSE(w, Xv, Yv, order, verbose=False)    
+        
+        if sse_v < bestSSE:
+            bestorder, bestlam   = order, lam
+            bestSSE              =  sse_v
+            bestweights          =  w
+    
+    print "test data"
+    plot(Xd, Yd, bestweights, 1)
+    print "validation data"
+    plot(Xv, Yv, bestweights, 2)
+    
+    print "M = {}, Lamda = {}, w = {}, SSE = {}".format(bestorder, bestlam, str(bestweights.flatten()), bestSSE )
+    
+    return bestorder, bestlam, bestweights
+        
+    
 
 
 ######################## Part 2 ###########################################
@@ -151,7 +216,7 @@ def testProblemThreeHelper(guess):
     weights =   guess
     kwargs  =   { 'X':X, 'Y':Y, 'order':order, 'verbose':False}
     
-    goal, w = gd.gradientDescentNumerical( computeSSE, weights, **kwargs )
+    goal, w = gd.gradientDescentNumerical( computeSSE, weights,thold=0.0001, **kwargs)
     print( "goal:{:.8f}\t coord:{}".format(goal, str(w)))
     
 def testProblemThree():
@@ -169,21 +234,33 @@ def testProblemFour():
     
     print weights.flatten()
     computeSSE(weights, X, Y, order, verbose=True, designMatrix = designSineMatrix)
+    
+    
+    
+    
+    
 
     
 ######################## Part 3 ###########################################    
     
+# Ridge Regression
 def test3_1():
     X, Y    =    bishopCurveData()
     order   =    10
     lam     =    np.e ** -18
     #lam     =    0
     #lam     =    1
+    w       =    ridgeRegression(X, Y, order, lam)
+
     
-    weights = ridgeRegression(X, Y, order, lam)
-    
-    print "Ridge regresion weights: {}".format(str(weights.flatten()))
+    print "Ridge regresion weights: {}".format(str(w.flatten()))
     
     
     
-test3_1()
+def test3_2():
+    crossValidation()
+    
+def test3_2_model_selection():
+    return findBestRegularzation()
+    
+m,l,w = test3_2_model_selection()
