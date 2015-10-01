@@ -87,7 +87,10 @@ def regressValidateData():
 
 def regressTestData():
     return getData('regress_test.txt')
-    
+
+def blogTestXData():
+    Xd = pl.loadtxt(r'BlogFeedback_data/x_test.csv')
+    return Xd
     
 
 #problem 2.2
@@ -198,6 +201,10 @@ def getGrad(X, Y, w, designmMatrix=designMatrix) :
     
     return grad.flatten(0)
     
+def blogRegression():
+    # indices 3, 8, 13, 18,23 are highly volatile
+    pass
+    
 
 ######################## Part 2 ###########################################
 
@@ -241,12 +248,21 @@ def testProblemThreeHelper(guess):
     goal, w = gd.gradientDescent( computeSSE, getGradXY, weights,thold=0.0001, **kwargs)
     print( "goal:{:.8f}\t coord:{}".format(goal, str(w)))
     
-def testProblemThree():
-    guess1 = np.array([ 1.0, 7.0, -25.0, 15.0 ])
-    guess2 = np.zeros(4)
+    return goal, w
     
-    testProblemThreeHelper(guess1)
-    testProblemThreeHelper(guess2)
+def testProblemThree():
+    Joo,Hun = bishopCurveData()    
+    
+    guess1  = np.array([ 1.0, 7.0, -25.0, 15.0 ])
+    guess2  = np.zeros(4)
+    
+    goal_good, w_good = testProblemThreeHelper(guess1)
+    goal_bad,  w_bad  = testProblemThreeHelper(guess2)
+    
+    plot(Joo,Hun, w_good[:,np.newaxis], 1, titlestring="Gradient Descent with Good Initial Guess")
+    plot(Joo,Hun, w_bad[:,np.newaxis] , 2, titlestring="Gradient Descent with Bad Initial Guess")
+    
+    
 
 def testProblemFour():
     X,Y         =   bishopCurveData()
@@ -285,4 +301,5 @@ def test3_2():
 def test3_2_model_selection():
     return findBestRegularzation()
     
+
 testProblemThree()
