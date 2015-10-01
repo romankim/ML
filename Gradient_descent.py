@@ -11,7 +11,6 @@ Created on Wed Sep 23 17:37:02 2015
 3. 
 """
 import numpy as np
-from scipy.stats import multivariate_normal
 from scipy.optimize import fmin_bfgs
 
 
@@ -54,7 +53,8 @@ def gradientDescentNumerical(f, guess, step=0.001, thold=0.00001, **kwargs) :
     niter  =  0
         
     while (diff > thold) :
-        delta   =  -step * np.array(finiteDifference(f, coord, **kwargs))
+        grad    =  np.array(finiteDifference(f, coord, **kwargs))
+        delta   =  -step * grad
         coord   =  coord + delta
         newobj  =  f(coord, **kwargs)
         diff    =  obj - newobj
@@ -63,6 +63,7 @@ def gradientDescentNumerical(f, guess, step=0.001, thold=0.00001, **kwargs) :
     
     print "Gradient Descent"
     print "Number of function calls : %d" % niter
+    print"Gradient: %s" % str(grad.flatten())
     
     return obj, coord    
 
