@@ -188,7 +188,14 @@ def findBestRegularzation():
     return bestorder, bestlam, bestweights
         
     
-
+def getGrad(X, Y, w, designmMatrix=designMatrix) :
+    order   =  len(w.flatten())
+    phi     =  designMatrix(X, order)
+    err     =  Y - np.dot(phi, w)
+    grad    =  -2.0 * np.dot(phi.T, err)
+    
+    return grad
+    
 
 ######################## Part 2 ###########################################
 
@@ -208,8 +215,14 @@ def testProblemTwo():
     
     computeSSE(weights, X, Y, order)
     
-    gradv = gd.finiteDifference(computeSSE, weights.flatten(), **{ 'X':X, 'Y':Y, 'order':order, 'verbose':False})
-    print gradv
+    
+        
+    grad       = getGrad(X, Y, weights) 
+    numergradv = gd.finiteDifference(computeSSE, weights.flatten(), **{ 'X':X, 'Y':Y, 'order':order, 'verbose':False})
+    print grad.flatten()    
+    print numergradv
+    
+
     
 
 def testProblemThreeHelper(guess):
@@ -265,4 +278,4 @@ def test3_2():
 def test3_2_model_selection():
     return findBestRegularzation()
     
-m,l,w = test3_2_model_selection()
+testProblemTwo()
