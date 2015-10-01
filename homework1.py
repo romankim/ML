@@ -189,12 +189,14 @@ def findBestRegularzation():
         
     
 def getGrad(X, Y, w, designmMatrix=designMatrix) :
+    if ( len(w.shape) == 1 ):
+        w = w[:, np.newaxis]
     order   =  len(w.flatten())
     phi     =  designMatrix(X, order)
     err     =  Y - np.dot(phi, w)
     grad    =  -2.0 * np.dot(phi.T, err)
     
-    return grad
+    return grad.flatten(0)
     
 
 ######################## Part 2 ###########################################
@@ -231,7 +233,12 @@ def testProblemThreeHelper(guess):
     weights =   guess
     kwargs  =   { 'X':X, 'Y':Y, 'order':order, 'verbose':False}
     
-    goal, w = gd.gradientDescentNumerical( computeSSE, weights,thold=0.0001, **kwargs)
+    def getGradXY(w):
+        X, Y = bishopCurveData()
+        return getGrad(X,Y,w)
+        
+    
+    goal, w = gd.gradientDescent( computeSSE, getGradXY, weights,thold=0.0001, **kwargs)
     print( "goal:{:.8f}\t coord:{}".format(goal, str(w)))
     
 def testProblemThree():
@@ -278,4 +285,4 @@ def test3_2():
 def test3_2_model_selection():
     return findBestRegularzation()
     
-testProblemTwo()
+testProblemThree()
