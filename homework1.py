@@ -4,6 +4,7 @@ import pylab as pl
 import numpy as np
 import Gradient_descent as gd
 from scipy.optimize import fmin_bfgs
+import scipy
 
 
 """
@@ -38,8 +39,10 @@ def designSineMatrix(X, order) :
     phi[:,0] = np.ones( phi.shape[0] )
     
     return phi
+
+
     
-        
+
     
 
 # X is an array of N data points (one dimensional for now), that is, NX1
@@ -95,7 +98,7 @@ def regressTestData():
 """
 @params
 """
-def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
+def computeSSE(w, X, Y, order, verbose=True, designMatrix=designMatrix):
     if len(w.shape) == 1 :
         w = w[:, np.newaxis]
     
@@ -108,6 +111,80 @@ def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
         print('SSE: ', SSE)
     
     return SSE
+
+
+##################### Part 4.2 ############################
+    
+def getLassoData():
+    mat   =  scipy.io.loadmat('regress-highdim.mat')
+    
+    Xd    =  mat['X_train'].T
+    Yd    =  mat['Y_train'].T
+    
+    Xt    =  mat['X_test'].T
+    Yt    =  mat['Y_test'].T
+    
+    Wstar =  mat['W_true'].T
+    
+    
+    return Xd, Yd, Xt, Yt, Wstar
+    
+"""
+Part 4.2
+"""
+def designMatrixLassoTrainData(dummy, order=1) :
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()
+    return Xd
+    
+def designMatrixLassoTestData(dummy, order=1) :
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()
+    return Xt
+"""
+Problem 4.2.1
+"""
+def highdimRidgeRegression(lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()
+    dummy = None
+    w  = ridgeRegression( dummy, Yd, dummy, lam=lam, designMatrix=designMatrixLassoTrainData, verbose=False  )
+    return w    
+    
+def MSEofLassoTest(w):
+    Yt  =  getLassoData()[3]
+    dummy = None
+    MSE = (1.0/len(Yt)) * computeSSE(w, dummy, Yt, dummy, verbose=False, designMatrix=designMatrixLassoTestData)
+    return MSE
+    
+def MSEofLassoTrain(w):
+    Yd  =  getLassoData()[1]
+    dummy = None
+    MSE = (1.0/len(Yd)) * computeSSE(w, dummy, Yd, dummy, verbose=False, designMatrix=designMatrixLassoTrainData)
+    return MSE    
+    
+test_4_2_1()
+
+def test_4_2_1():
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    
+    lam = 0.0
+    w = highdimRidgeRegression(lam = lam)
+    MSE = MSEofLassoTest(w)
+    
+    print "For lambda of %f, MSE on test data was %f"%(lam,MSE)
+    print "Optimal weights: "
+    print w
+    
+    MSE = MSEofLassoTrain(w)
+    MSE2 = MSEofLassoTrain(Wstar)
+    
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    
+    
+    
+
+    
+    
+    
 
 """
 Problem 3.1
@@ -354,7 +431,7 @@ def testProblemFour():
     computeSSE(weights, X, Y, order, verbose=True, designMatrix = designSineMatrix)
     
     
-    
+
     
     
 
@@ -384,5 +461,9 @@ def test3_2_model_selection():
 def test3_3():
     blogRegression(cluster=True)
     
+    
 
-test3_3()
+
+
+#test3_2_model_selection()
+
