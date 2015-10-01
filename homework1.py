@@ -192,7 +192,7 @@ def blogRegression(cluster=False):
     Xv, Yv  =  blogValData()
     Xt, Yt  =  blogTestData()
 
-    lamdas       =   np.arange(0.01, 3.0, 0.01, dtype=float)
+    lamdas       =   np.arange(0.01, 3.01, 0.1, dtype=float)
     bestSSE      =   np.inf
     bestlam      =   0.0
     bestweights  =   []
@@ -382,7 +382,7 @@ def test3_2_model_selection():
     return findBestRegularzation()
     
 def test3_3():
-    blogRegression()
+    blogRegression(cluster=True)
     
 
 test3_3()
