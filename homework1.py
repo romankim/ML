@@ -5,7 +5,8 @@ import numpy as np
 import Gradient_descent as gd
 from scipy.optimize import fmin_bfgs
 import scipy
-
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 """
 Problem 2.1
@@ -142,46 +143,142 @@ def designMatrixLassoTestData(dummy, order=1) :
 """
 Problem 4.2.1
 """
-def highdimRidgeRegression(lam=0.0):
+def probFourGoalFn(w, lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()
-    dummy = None
-    w  = ridgeRegression( dummy, Yd, dummy, lam=lam, designMatrix=designMatrixLassoTrainData, verbose=False  )
-    return w    
     
-def MSEofLassoTest(w):
-    Yt  =  getLassoData()[3]
-    dummy = None
-    MSE = (1.0/len(Yt)) * computeSSE(w, dummy, Yt, dummy, verbose=False, designMatrix=designMatrixLassoTestData)
-    return MSE
+    SSE = np.dot( (Yd - np.dot(Xd, w)).T, (Yd - np.dot(Xd, w)) )
+    SSE = SSE.flatten()[0]
+    SSE = SSE + lam * np.dot( w.T, w ).flatten()[0] 
     
-def MSEofLassoTrain(w):
-    Yd  =  getLassoData()[1]
+    return SSE    
+    
+def ProbFourGetGrad(w, lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    err    =   Yd - np.dot(Xd, w)
+    grad   =   -2.0 * np.dot( Xd.T, err )
+    
+    grad   =   grad + 2.0 * lam * w
+    
+    #if lam>0.0:
+    #    print lam
+        
+    return grad
+
+def ProbFourRidgeRegression(lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    lam    =   lam
+    w      =   np.zeros(shape=(12,1), dtype=float)    
+    goal, coord = gd.gradientDescent(probFourGoalFn, ProbFourGetGrad, w, **{'lam':lam})
+    
+    print "Goal is %f" %goal
+    print coord
+    
+    return goal, coord
+    
+    
+def computeMSE(w, X, Y): 
     dummy = None
-    MSE = (1.0/len(Yd)) * computeSSE(w, dummy, Yd, dummy, verbose=False, designMatrix=designMatrixLassoTrainData)
+    MSE = (1.0/len(Y)) * computeSSE(w, X, Y, dummy, verbose=False, designMatrix=designMatrixSelf)
     return MSE    
     
-test_4_2_1()
 
+# Probl 4.2.1
 def test_4_2_1():
     Xd, Yd, Xt, Yt, Wstar = getLassoData()    
     
     lam = 0.0
-    w = highdimRidgeRegression(lam = lam)
-    MSE = MSEofLassoTest(w)
+    goal, w = ProbFourRidgeRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = 0')
+
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
     
-    print "For lambda of %f, MSE on test data was %f"%(lam,MSE)
-    print "Optimal weights: "
-    print w
-    
-    MSE = MSEofLassoTrain(w)
-    MSE2 = MSEofLassoTrain(Wstar)
-    
+    print "lambda : %f" %lam
     print "With estimated w, MSE on train data was %f"%(MSE)
     print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
     
+    lam = 0.5
+    goal, w = ProbFourRidgeRegression(lam = lam)
+
+    
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+
+
+    lam = 1.0
+    goal, w = ProbFourRidgeRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = 1')
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    
+    lam = 2.0
+    goal, w = ProbFourRidgeRegression(lam = lam)
+
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
     
     
 
+    lam = 3.0
+    goal, w = ProbFourRidgeRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = 3')
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    test4_2_1_plotgraph(Wstar, 'True function')
+    
+    plt.plot(Xd[:,0], Yd.flatten(), "ro", color='brown', marker='*', markersize=10, label='Training Points')    
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    #plt.plot(blue_line)
+
+def test4_2_1_plotgraph(w, label):
+    X0 = np.arange(-1,1,0.01)
+    X0 = X0.reshape(1,len(X0))
+    
+    Ks = np.arange(1,12).reshape(11,1)
+    X  = np.sin(2*np.pi*X0 * Ks / 5)
+    X  = np.vstack((X0,X))
+    
+    Y  = np.dot(X.T,w)
+    
+    plt.plot(X0.flatten(), Y.flatten(), label=label)
     
     
     
@@ -467,3 +564,7 @@ def test3_3():
 
 #test3_2_model_selection()
 
+
+test_4_2_1()
+
+    
