@@ -88,9 +88,7 @@ def regressValidateData():
 def regressTestData():
     return getData('regress_test.txt')
 
-def blogTestXData():
-    Xd = pl.loadtxt(r'BlogFeedback_data/x_test.csv')
-    return Xd
+
     
 
 #problem 2.2
@@ -115,11 +113,12 @@ def computeSSE(w, X, Y, order, verbose=True, designMatrix = designMatrix):
 Problem 3.1
 Implement ridge regression
 """
-def ridgeRegression(X, Y, order, lam=0, verbose=True):
-    pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
-    phi = designMatrix(X, order)
-    w   = np.dot( np.dot( np.linalg.inv( lam * np.identity(order) + np.dot(phi.T, phi) ), phi.T ), Y)
+def ridgeRegression(X, Y, order, lam=0, designMatrix=designMatrix, verbose=True):
+    phi     =  designMatrix(X, order)
+    phiTphi =  np.dot(phi.T, phi)
+    w   = np.dot( np.dot( np.linalg.inv( lam * np.identity(phiTphi.shape[0]) + phiTphi  ), phi.T ), Y)
     if verbose:
+        pl.plot(X.T.tolist()[0],Y.T.tolist()[0], 'gs')
         pts = [[p] for p in pl.linspace(min(X), max(X), 100)]
         Yp = pl.dot(w.T, designMatrix(pts, order).T)
          
@@ -138,6 +137,98 @@ def plot(X, Y, w, figurenum=1, designMatrix=designMatrix, titlestring=None):
     
     if titlestring is not None:
         pl.title(titlestring)
+
+    
+def getGrad(X, Y, w, designmMatrix=designMatrix) :
+    if ( len(w.shape) == 1 ):
+        w = w[:, np.newaxis]
+    order   =  len(w.flatten())
+    phi     =  designMatrix(X, order)
+    err     =  Y - np.dot(phi, w)
+    grad    =  -2.0 * np.dot(phi.T, err)
+    
+    return grad.flatten(0)
+
+
+"""
+Problem 3.3
+"""
+def blogTrainData():
+    Xd = pl.loadtxt(r'BlogFeedback_data/x_train.csv', dtype=float, delimiter=",")
+    Yd = pl.loadtxt(r'BlogFeedback_data/y_train.csv', dtype=float, delimiter=",")
+    return Xd, Yd
+def blogValData():
+    Xv = pl.loadtxt(r'BlogFeedback_data/x_val.csv', dtype=float, delimiter=",")
+    Yv = pl.loadtxt(r'BlogFeedback_data/y_val.csv', dtype=float, delimiter=",")
+    return Xv, Yv
+def blogTestData():
+    Xt = pl.loadtxt(r'BlogFeedback_data/x_test.csv', dtype=float, delimiter=",")
+    Yt = pl.loadtxt(r'BlogFeedback_data/y_test.csv', dtype=float, delimiter=",")
+    return Xt, Yt
+
+"""
+Scaling methods due to https://en.wikipedia.org/wiki/Feature_scaling
+Given an input of 1-D array, rescale it and return
+"""
+def rescaling(X):
+    mn   =   np.min(X)
+    mx   =   np.max(X)
+    X    =   (X - mn) / (mx - mn)
+    return X
+def standarize(X):
+    std  =   np.std(X)
+    mean =   np.mean(X)
+    X    =   (X-mean)/std
+    return X
+def designMatrixSelf(X, order=0):
+    return X
+"""
+Problem 3.3
+Finds the best regularization parameters..
+"""    
+def blogRegression(cluster=False):
+    # indices 3, 8, 13, 18,23 are highly volatile
+    Xd, Yd  =  blogTrainData()
+    Xv, Yv  =  blogValData()
+    Xt, Yt  =  blogTestData()
+
+    lamdas       =   np.arange(0.01, 3.0, 0.01, dtype=float)
+    bestSSE      =   np.inf
+    bestlam      =   0.0
+    bestweights  =   []
+    """
+    Dear Joohun,
+    Please just ignore '0' that I am passing into the functions below.
+    """
+    
+    for lam in lamdas:
+        w       =    ridgeRegression( Xd, Yd, 0, lam, designMatrix=designMatrixSelf, verbose=False)
+        sse_v   =    computeSSE(w, Xv, Yv, 0, verbose=False, designMatrix=designMatrixSelf)
+        
+        if sse_v < bestSSE:
+            bestlam         =  lam
+            bestSSE         =  sse_v
+            bestweights     =  w
+    
+    if (not cluster) :
+        print "SSE on Training Data:   %f" % computeSSE(bestweights, Xd, Yd, 0, verbose=False, designMatrix=designMatrixSelf)
+        print "SSE on Validation Data: %f" % computeSSE(bestweights, Xv, Yv, 0, verbose=False, designMatrix=designMatrixSelf)
+        print "SSE on Test Data:       %f" % computeSSE(bestweights, Xv, Yt, 0, verbose=False, designMatrix=designMatrixSelf)
+        
+        print "Optimum: Lamda = {}, w = {}, SSE = {}".format(bestlam, str(bestweights.flatten()), bestSSE )
+    else :
+        f = open('867_ps1_3_3.txt', 'wb')
+        f.write("SSE on Training Data:   %f" % computeSSE(bestweights, Xd, Yd, 0, verbose=False, designMatrix=designMatrixSelf))
+        f.write("SSE on Validation Data: %f" % computeSSE(bestweights, Xv, Yv, 0, verbose=False, designMatrix=designMatrixSelf))
+        f.write("SSE on Test Data:       %f" % computeSSE(bestweights, Xv, Yt, 0, verbose=False, designMatrix=designMatrixSelf))
+        f.write("Optimum: Lamda = {}, w = {}, SSE = {}".format(bestlam, str(bestweights.flatten()), bestSSE ))
+        
+        f.close()
+        
+    
+    return bestlam, bestweights
+
+
 
 """
 Problem 3.2
@@ -159,7 +250,11 @@ def crossValidation():
     sse_v   =    computeSSE(w, Xv, Yv, order, verbose=True)
     print "Testing Data SSE\t M=%d, lam=%f" % (order, lam)
     sse_t   =    computeSSE(w, Xt, Yt, order, verbose=True)
-    
+
+
+"""
+Problem 3.2
+"""
 def findBestRegularzation():
     Xd, Yd  =  regressTrainData()
     Xv, Yv  =  regressValidateData()
@@ -170,41 +265,26 @@ def findBestRegularzation():
     bestSSE      =   np.inf
     bestorder    =   0.0
     bestlam      =   0.0
-    bestweights  = []
+    bestweights  =   []
     
     
     for order, lam in [(o,l) for o in orders for l in lamdas]:
         w       =    ridgeRegression( Xd, Yd, order, lam, verbose=False)
-        sse_v   =    computeSSE(w, Xv, Yv, order, verbose=False)    
+        sse_v   =    computeSSE(w, Xv, Yv, order, verbose=False)
         
         if sse_v < bestSSE:
             bestorder, bestlam   = order, lam
             bestSSE              =  sse_v
             bestweights          =  w
     
-
-    plot(Xd, Yd, bestweights, 1, titlestring="Ridge Regression on Test Data")
-    plot(Xv, Yv, bestweights, 2, titlestring="Ridge Regression on Validation Data")
+    plot(Xd, Yd, bestweights, 1, titlestring="Ridge Regression on Training Data")
+    plot(Xt, Yt, bestweights, 2, titlestring="Ridge Regression on Test Data")
+    plot(Xv, Yv, bestweights, 3, titlestring="Ridge Regression on Validation Data")
     
     print "M = {}, Lamda = {}, w = {}, SSE = {}".format(bestorder, bestlam, str(bestweights.flatten()), bestSSE )
     
     return bestorder, bestlam, bestweights
         
-    
-def getGrad(X, Y, w, designmMatrix=designMatrix) :
-    if ( len(w.shape) == 1 ):
-        w = w[:, np.newaxis]
-    order   =  len(w.flatten())
-    phi     =  designMatrix(X, order)
-    err     =  Y - np.dot(phi, w)
-    grad    =  -2.0 * np.dot(phi.T, err)
-    
-    return grad.flatten(0)
-    
-def blogRegression():
-    # indices 3, 8, 13, 18,23 are highly volatile
-    pass
-    
 
 ######################## Part 2 ###########################################
 
@@ -301,5 +381,8 @@ def test3_2():
 def test3_2_model_selection():
     return findBestRegularzation()
     
+def test3_3():
+    blogRegression()
+    
 
-testProblemThree()
+test3_3()
