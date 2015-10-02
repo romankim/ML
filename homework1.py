@@ -152,6 +152,15 @@ def probFourGoalFn(w, lam=0.0):
     
     return SSE    
     
+def probFourLassoGoalFn(w, lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()
+    
+    SSE = np.dot( (Yd - np.dot(Xd, w)).T, (Yd - np.dot(Xd, w)) )
+    SSE = SSE.flatten()[0]
+    SSE = SSE + lam *np.sum(np.abs(w))
+    
+    return SSE    
+    
 def ProbFourGetGrad(w, lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()    
     err    =   Yd - np.dot(Xd, w)
@@ -163,6 +172,27 @@ def ProbFourGetGrad(w, lam=0.0):
     #    print lam
         
     return grad
+    
+def ProbFourGetLassoGrad(w, lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    err    =   Yd - np.dot(Xd, w)
+    grad   =   -2.0 * np.dot( Xd.T, err )    
+    lassograd = np.zeros(shape=(12,1))    
+    
+    for i in xrange(len(w)) :
+        x = w[i,0]
+        d = 0
+        if x > 0:
+            d = 1
+        elif x < 0:
+            d=-1
+        lassograd[i,0] = d
+    
+    grad   =  grad + lam * w
+    
+    #if lam>0.0:
+    #    print lam
+    return grad
 
 def ProbFourRidgeRegression(lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()    
@@ -171,7 +201,16 @@ def ProbFourRidgeRegression(lam=0.0):
     goal, coord = gd.gradientDescent(probFourGoalFn, ProbFourGetGrad, w, **{'lam':lam})
     
     print "Goal is %f" %goal
-    print coord
+    
+    return goal, coord
+    
+def ProbFourLassoRegression(lam=0.0):
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    lam    =   lam
+    w      =   np.zeros(shape=(12,1), dtype=float)    
+    goal, coord = gd.gradientDescent(probFourLassoGoalFn, ProbFourGetLassoGrad, w, **{'lam':lam})
+    
+    print "Goal is %f" %goal
     
     return goal, coord
     
@@ -188,7 +227,7 @@ def test_4_2_1():
     
     lam = 0.0
     goal, w = ProbFourRidgeRegression(lam = lam)
-    test4_2_1_plotgraph(w, 'Lambda = 0')
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
 
     MSE = computeMSE(w, Xd, Yd)
     MSE2 = computeMSE(Wstar, Xd, Yd)
@@ -196,67 +235,133 @@ def test_4_2_1():
     MSE4 = computeMSE(Wstar, Xt, Yt)
     
     print "lambda : %f" %lam
-    print "With estimated w, MSE on train data was %f"%(MSE)
-    print "With true w, MSE on train data was %f"%(MSE2)
-    print "With estimated w, MSE on test data was %f"%(MSE3)
-    print "With true w, MSE on test data was %f"%(MSE4)
-    
-    lam = 0.5
-    goal, w = ProbFourRidgeRegression(lam = lam)
-
-    
-    MSE = computeMSE(w, Xd, Yd)
-    MSE2 = computeMSE(Wstar, Xd, Yd)
-    MSE3 = computeMSE(w, Xt, Yt)
-    MSE4 = computeMSE(Wstar, Xt, Yt)
-    
-    print "lambda : %f" %lam
-    print "With estimated w, MSE on train data was %f"%(MSE)
-    print "With true w, MSE on train data was %f"%(MSE2)
-    print "With estimated w, MSE on test data was %f"%(MSE3)
-    print "With true w, MSE on test data was %f"%(MSE4)
-
-
-    lam = 1.0
-    goal, w = ProbFourRidgeRegression(lam = lam)
-    test4_2_1_plotgraph(w, 'Lambda = 1')
-    MSE = computeMSE(w, Xd, Yd)
-    MSE2 = computeMSE(Wstar, Xd, Yd)
-    MSE3 = computeMSE(w, Xt, Yt)
-    MSE4 = computeMSE(Wstar, Xt, Yt)
-    
-    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
     print "With estimated w, MSE on train data was %f"%(MSE)
     print "With true w, MSE on train data was %f"%(MSE2)
     print "With estimated w, MSE on test data was %f"%(MSE3)
     print "With true w, MSE on test data was %f"%(MSE4)
     
     
-    lam = 2.0
+    lam = 0.1
     goal, w = ProbFourRidgeRegression(lam = lam)
-
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
     MSE = computeMSE(w, Xd, Yd)
     MSE2 = computeMSE(Wstar, Xd, Yd)
     MSE3 = computeMSE(w, Xt, Yt)
     MSE4 = computeMSE(Wstar, Xt, Yt)
     
     print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
     print "With estimated w, MSE on train data was %f"%(MSE)
     print "With true w, MSE on train data was %f"%(MSE2)
     print "With estimated w, MSE on test data was %f"%(MSE3)
     print "With true w, MSE on test data was %f"%(MSE4)
     
     
+    
 
-    lam = 3.0
+    lam = 0.2
     goal, w = ProbFourRidgeRegression(lam = lam)
-    test4_2_1_plotgraph(w, 'Lambda = 3')
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
     MSE = computeMSE(w, Xd, Yd)
     MSE2 = computeMSE(Wstar, Xd, Yd)
     MSE3 = computeMSE(w, Xt, Yt)
     MSE4 = computeMSE(Wstar, Xt, Yt)
     
     print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    
+    
+    lam = 0.3
+    goal, w = ProbFourRidgeRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    
+    test4_2_1_plotgraph(Wstar, 'True function')
+    
+    plt.plot(Xd[:,0], Yd.flatten(), "ro", color='brown', marker='*', markersize=10, label='Training Points')    
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    #plt.plot(blue_line)
+    
+def test_4_2_2():
+    Xd, Yd, Xt, Yt, Wstar = getLassoData()    
+    
+    lam = 0.0
+    goal, w = ProbFourLassoRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
+
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    lam = 0.1
+    goal, w = ProbFourLassoRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)    
+    
+    
+    lam = 0.2
+    goal, w = ProbFourLassoRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
+    print "With estimated w, MSE on train data was %f"%(MSE)
+    print "With true w, MSE on train data was %f"%(MSE2)
+    print "With estimated w, MSE on test data was %f"%(MSE3)
+    print "With true w, MSE on test data was %f"%(MSE4)
+    
+    
+    
+
+    lam = 0.3
+    goal, w = ProbFourLassoRegression(lam = lam)
+    test4_2_1_plotgraph(w, 'Lambda = {0}'.format(lam))
+    MSE = computeMSE(w, Xd, Yd)
+    MSE2 = computeMSE(Wstar, Xd, Yd)
+    MSE3 = computeMSE(w, Xt, Yt)
+    MSE4 = computeMSE(Wstar, Xt, Yt)
+    
+    print "lambda : %f" %lam
+    print "Weights: %s" %(str(w.flatten()))
     print "With estimated w, MSE on train data was %f"%(MSE)
     print "With true w, MSE on train data was %f"%(MSE2)
     print "With estimated w, MSE on test data was %f"%(MSE3)
@@ -267,6 +372,7 @@ def test_4_2_1():
     plt.plot(Xd[:,0], Yd.flatten(), "ro", color='brown', marker='*', markersize=10, label='Training Points')    
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     #plt.plot(blue_line)
+    plt.title("Lasso")
 
 def test4_2_1_plotgraph(w, label):
     X0 = np.arange(-1,1,0.01)
@@ -567,4 +673,5 @@ def test3_3():
 
 test_4_2_1()
 
+    
     
