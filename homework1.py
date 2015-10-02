@@ -156,10 +156,10 @@ def probFourLassoGoalFn(w, lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()
     
     SSE = np.dot( (Yd - np.dot(Xd, w)).T, (Yd - np.dot(Xd, w)) )
-    SSE = SSE.flatten()[0]
+    SSE = SSE.flatten()[0] / len(Yd)
     SSE = SSE + lam *np.sum(np.abs(w))
     
-    return SSE    
+    return SSE
     
 def ProbFourGetGrad(w, lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()    
@@ -176,7 +176,7 @@ def ProbFourGetGrad(w, lam=0.0):
 def ProbFourGetLassoGrad(w, lam=0.0):
     Xd, Yd, Xt, Yt, Wstar = getLassoData()    
     err    =   Yd - np.dot(Xd, w)
-    grad   =   -2.0 * np.dot( Xd.T, err )    
+    grad   =   -2.0 * np.dot( Xd.T, err ) / len(Yd)
     lassograd = np.zeros(shape=(12,1))    
     
     for i in xrange(len(w)) :
@@ -671,7 +671,7 @@ def test3_3():
 #test3_2_model_selection()
 
 
-test_4_2_1()
+test_4_2_2()
 
     
     
